@@ -1,0 +1,50 @@
+# Byte-compiled
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Environment
+.env
+venv/
+.venv/
+virtualenv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Django
+staticfiles/
+*.sqlite3
+db.sqlite3
+media/
+
+# JWT Keys
+**/*.pem
+!**/keys/placeholder
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+htmlcov/
+.coverage
+.coverage.*
+
+# Docker
+docker-compose.yml
+
+# Distribution
+*.egg-info/
+dist/
+build/
+
+# Celery
+celerybeat-schedule*
+
+# Pytest
+.pytest_cache/

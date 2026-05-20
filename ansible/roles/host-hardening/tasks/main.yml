@@ -1,0 +1,9 @@
+---
+- name: Set kernel parameters for high-throughput
+  sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    sysctl_set: yes
+    state: present
+    reload: yes
+  loop: "{{ sysctl_config | dict2items }}"

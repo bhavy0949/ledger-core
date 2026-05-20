@@ -1,0 +1,60 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_ECR_REPOSITORY = "${env.AWS_ECR_REPOSITORY}"
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
+        KUBERNETES_CLUSTER = "${env.KUBERNETES_CLUSTER}"
+    }
+
+    stages {
+        stage('Check & Lint') {
+            steps {
+                sh 'pip install -r src/requirements.txt'
+                sh 'flake8 src/'
+                sh 'black --check src/'
+            }
+        }
+
+        stage('Static Test') {
+            steps {
+                sh 'cd src && pytest --cov --cov-report=xml --cov-report=term'
+            }
+        }
+
+        stage('Security Scan') {
+            steps {
+                sh 'pip install safety && safety check -r src/requirements.txt'
+                sh 'trivy image --severity HIGH,CRITICAL --exit-code 1 "${AWS_ECR_REPOSITORY}:${IMAGE_TAG}" || true'
+            }
+        }
+
+        stage('Compile & Push') {
+            steps {
+                sh """
+                    docker build -f src/Dockerfile.api -t ${AWS_ECR_REPOSITORY}/ledger-api:${IMAGE_TAG} .
+                    docker build -f src/Dockerfile.worker -t ${AWS_ECR_REPOSITORY}/ledger-worker:${IMAGE_TAG} .
+                    docker push ${AWS_ECR_REPOSITORY}/ledger-api:${IMAGE_TAG}
+                    docker push ${AWS_ECR_REPOSITORY}/ledger-worker:${IMAGE_TAG}
+                """
+            }
+        }
+
+        stage('Cluster Rollout') {
+            steps {
+                sh """
+                    kubectl set image deployment/api-deployment api-container=${AWS_ECR_REPOSITORY}/ledger-api:${IMAGE_TAG}
+                    kubectl set image deployment/worker-deployment worker-container=${AWS_ECR_REPOSITORY}/ledger-worker:${IMAGE_TAG}
+                    kubectl rollout status deployment/api-deployment
+                    kubectl rollout status deployment/worker-deployment
+                """
+            }
+        }
+    }
+
+    post {
+        failure {
+            echo "Pipeline failed. Check logs for details."
+        }
+    }
+}

@@ -1,0 +1,7 @@
+---
+- name: Provision and harden ledger-core hosts
+  hosts: all
+  become: yes
+  roles:
+    - host-hardening
+    - docker-bootstrap
