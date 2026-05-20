@@ -1,4 +1,3 @@
-You can copy the markdown block below exactly as it is and ingest it as context for any AI development agent (like a Cursor agent, a custom GPT, or a specialized coding assistant). It contains the complete architectural blueprint, technical requirements, configuration rules, and folder structure needed to generate the codebase.
 
 ---
 
